@@ -118,7 +118,7 @@ Expected: PASS。
 
 Run: `node --test pc-game-settlement/tests/*.test.mjs`
 
-Expected: 25 tests, 25 pass, 0 fail。
+Expected: 29 tests, 29 pass, 0 fail。
 
 Commit:
 
