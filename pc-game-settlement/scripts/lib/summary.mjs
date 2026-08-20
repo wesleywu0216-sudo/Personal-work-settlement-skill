@@ -116,6 +116,6 @@ export async function writeSummaryWorkbook({ batch, outputPath, metadata }) {
   await fs.mkdir(path.dirname(outputPath), { recursive: true });
   const exported = await SpreadsheetFile.exportXlsx(workbook);
   await exported.save(outputPath);
+  await fs.rm(`${outputPath}.inspect.ndjson`, { force: true });
   return { workbook, outputPath };
 }
-

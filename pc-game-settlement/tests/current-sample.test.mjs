@@ -72,7 +72,10 @@ test("原神结算单替换外部引用并写入乙方资料", async () => {
 
   assert.equal(sheet.getRange("H5").formulas[0][0], "=ROUND(E5-F5-G5,2)");
   assert.equal(sheet.getRange("J6").formulas[0][0], "=ROUND(H5*I6,2)");
-  assert.equal(sheet.getRange("L6").formulas[0][0], "=ROUND((H5-J6)*K6,2)");
+  assert.equal(
+    sheet.getRange("L6").formulas[0][0],
+    "=ROUND((H5-J6)*K6+IF((H5-J6)*K6>=0,0.000000001,-0.000000001),2)",
+  );
   assert.equal(sheet.getRange("M5").formulas[0][0], "=L6");
   assert.equal(sheet.getRange("M7").formulas[0][0], "=SUM(M5:M6)");
   assert.equal(formulas.some((formula) => /\[|\]|_xlfn|端游!/.test(formula)), false);
@@ -85,6 +88,21 @@ test("原神结算单替换外部引用并写入乙方资料", async () => {
     externalPackageLinks: 0,
     amountDelta: 0,
   });
+  await assert.rejects(fs.access(`${outputPath}.inspect.ndjson`));
+});
+
+test("半分边界按十进制四舍五入，明日方舟最终金额为1897996.46", async () => {
+  const batch = await loadCurrentBatch();
+  const row = batch.ready.find((item) => item.normalizedGame === "明日方舟");
+  assert.ok(row, "当前批次应包含明日方舟");
+  const outputDir = path.resolve("test-output/half-cent");
+  await fs.rm(outputDir, { recursive: true, force: true });
+  await fs.mkdir(outputDir, { recursive: true });
+  const outputPath = path.join(outputDir, "明日方舟 （端游）202607.xlsx");
+  await writeSettlementWorkbook({ templatePath: TEMPLATE, row, outputPath });
+  const validation = await validateSettlementWorkbook(outputPath, row);
+  assert.equal(validation.status, "PASS");
+  assert.equal(validation.amountDelta, 0);
 });
 
 test("汇总工作簿包含四张清单并记录白银之城人工排除", async () => {

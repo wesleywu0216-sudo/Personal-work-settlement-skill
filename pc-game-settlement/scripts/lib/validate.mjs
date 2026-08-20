@@ -44,5 +44,6 @@ export async function validateSettlementWorkbook(filePath, row) {
     criticalMatches.every(Boolean)
       ? "PASS"
       : "FAIL";
+  await fs.rm(`${filePath}.inspect.ndjson`, { force: true });
   return { status, formulaErrors, externalFormulaLinks, externalPackageLinks, amountDelta };
 }

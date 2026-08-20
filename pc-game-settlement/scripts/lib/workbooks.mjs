@@ -197,7 +197,9 @@ export async function writeSettlementWorkbook({ templatePath, row, outputPath })
   sheet.getRange("I6").values = [[row.渠道费率]];
   sheet.getRange("J6").formulas = [["=ROUND(H5*I6,2)"]];
   sheet.getRange("K6").values = [[row.比例]];
-  sheet.getRange("L6").formulas = [["=ROUND((H5-J6)*K6,2)"]];
+  sheet.getRange("L6").formulas = [[
+    "=ROUND((H5-J6)*K6+IF((H5-J6)*K6>=0,0.000000001,-0.000000001),2)",
+  ]];
   sheet.getRange("M5").formulas = [["=L6"]];
   sheet.getRange("M7").formulas = [["=SUM(M5:M6)"]];
   sheet.getRange("B15:B19").values = [
