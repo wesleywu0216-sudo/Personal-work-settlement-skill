@@ -58,6 +58,21 @@ test("人工排除按月份标准游戏名和企业精确命中", () => {
   );
 });
 
+test("人工排除统一识别YYYY-MM与YYYYMM月份", () => {
+  const result = isExcluded(
+    { ...whiteSilverRow, 月份: "2026-07" },
+    [
+      {
+        month: "202607",
+        game: "白银之城",
+        company: "上海乐元素世界科技有限公司",
+        reason: "收入 0.1 元，经确认不结算",
+      },
+    ],
+  );
+  assert.equal(result.excluded, true);
+});
+
 test("公司资料精确匹配且完全相同重复可去重", () => {
   const company = {
     公司: "上海米哈游影铁科技有限公司",

@@ -13,6 +13,12 @@ export function normalizeGameName(value) {
   return normalizeText(value).replace(/\s*[（(]PC版[）)]\s*$/i, "");
 }
 
+export function normalizeMonth(value) {
+  const text = normalizeText(value);
+  const match = /^(\d{4})[-/]?(\d{2})$/.exec(text);
+  return match ? `${match[1]}${match[2]}` : text;
+}
+
 export function passesBaseFilter(row) {
   return (
     normalizeText(row.合同初审状态) === "审核通过" &&
@@ -23,7 +29,7 @@ export function passesBaseFilter(row) {
 
 function exclusionParts(value) {
   return {
-    month: normalizeText(value.month ?? value.月份),
+    month: normalizeMonth(value.month ?? value.月份),
     game: normalizeGameName(value.game ?? value.游戏名称),
     company: normalizeText(value.company ?? value.企业名称),
   };
