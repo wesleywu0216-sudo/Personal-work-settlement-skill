@@ -28,20 +28,19 @@ async function loadCurrentBatch() {
   return prepareBatch(backend.rows, companies.rows, JSON.parse(exclusionsText));
 }
 
-test("当前样例预检得到18基础通过、1人工排除、17可生成", async () => {
+test("当前样例预检得到22基础通过、0人工排除、22可生成", async () => {
   const batch = await loadCurrentBatch();
   assert.deepEqual(batch.stats, {
     totalRows: 28,
-    baseEligible: 18,
-    baseExcluded: 10,
-    manualExcluded: 1,
-    ready: 17,
-    matchedProducts: 17,
-    matchedCompanies: 15,
+    baseEligible: 22,
+    baseExcluded: 6,
+    manualExcluded: 0,
+    ready: 22,
+    matchedProducts: 22,
+    matchedCompanies: 19,
     companyMissing: 0,
     blockingAnomalies: 0,
   });
-  assert.equal(batch.excluded.find((item) => item.type === "人工排除").row.游戏名称, "白银之城（PC版）");
 });
 
 test("原神结算单替换外部引用并写入乙方资料", async () => {
@@ -108,7 +107,7 @@ test("半分边界按十进制四舍五入，明日方舟最终金额为1897996.
   assert.equal(validation.amountDelta, 0);
 });
 
-test("汇总工作簿包含四张清单并记录白银之城人工排除", async () => {
+test("汇总工作簿包含四张清单并记录白银之城基础筛选排除", async () => {
   const batch = await loadCurrentBatch();
   const outputDir = path.resolve("test-output/summary");
   await fs.rm(outputDir, { recursive: true, force: true });
@@ -134,8 +133,8 @@ test("汇总工作簿包含四张清单并记录白银之城人工排除", async
   );
   const excludedValues = workbook.worksheets.getItem("排除清单").getUsedRange(true).values;
   const whiteSilver = excludedValues.find((row) => row[1] === "白银之城（PC版）");
-  assert.equal(whiteSilver[6], "人工排除");
-  assert.equal(whiteSilver[7], "收入 0.1 元，经确认不结算");
+  assert.equal(whiteSilver[6], "基础筛选");
+  assert.equal(whiteSilver[7], "收入金额<1");
   const anomalyValues = workbook.worksheets.getItem("异常清单").getUsedRange(true).values;
   assert.equal(anomalyValues[1][0], "无阻断异常");
   const infoValues = workbook.worksheets.getItem("运行信息").getUsedRange(true).values;

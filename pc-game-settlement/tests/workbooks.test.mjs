@@ -105,7 +105,7 @@ test("超出安全整数的数字银行帐号被拒绝", () => {
   );
 });
 
-test("人工排除先于乙方匹配，因此白银之城不触发公司缺失", () => {
+test("低于1元在基础筛选排除且不会触发公司缺失", () => {
   const whiteSilver = {
     ...validBackendRow,
     对账单ID: "id-white",
@@ -131,29 +131,19 @@ test("人工排除先于乙方匹配，因此白银之城不触发公司缺失",
       电话: "15316926375",
     },
   ];
-  const result = prepareBatch(
-    [whiteSilver, validBackendRow],
-    companyRows,
-    [
-      {
-        month: "202607",
-        game: "白银之城",
-        company: "上海乐元素世界科技有限公司",
-        reason: "收入 0.1 元，经确认不结算",
-      },
-    ],
-  );
+  const result = prepareBatch([whiteSilver, validBackendRow], companyRows);
   assert.deepEqual(result.stats, {
     totalRows: 2,
-    baseEligible: 2,
-    baseExcluded: 0,
-    manualExcluded: 1,
+    baseEligible: 1,
+    baseExcluded: 1,
+    manualExcluded: 0,
     ready: 1,
     matchedProducts: 1,
     matchedCompanies: 1,
     companyMissing: 0,
     blockingAnomalies: 0,
   });
-  assert.equal(result.excluded[0].type, "人工排除");
+  assert.equal(result.excluded[0].type, "基础筛选");
+  assert.equal(result.excluded[0].reason, "收入金额<1");
   assert.equal(result.ready[0].normalizedGame, "原神");
 });
