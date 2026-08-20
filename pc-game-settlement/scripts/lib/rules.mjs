@@ -27,6 +27,20 @@ export function passesBaseFilter(row) {
   );
 }
 
+export function baseFilterReasons(row) {
+  const reasons = [];
+  if (normalizeText(row.合同初审状态) !== "审核通过") {
+    reasons.push(`合同初审状态=${normalizeText(row.合同初审状态) || "空"}`);
+  }
+  if (normalizeText(row.合同复审状态) !== "审核通过") {
+    reasons.push(`合同复审状态=${normalizeText(row.合同复审状态) || "空"}`);
+  }
+  if (toCents(row.收入金额) === 0n) {
+    reasons.push("收入金额=0");
+  }
+  return reasons;
+}
+
 function exclusionParts(value) {
   return {
     month: normalizeMonth(value.month ?? value.月份),
@@ -148,5 +162,98 @@ export function reconcileRow(row) {
       收入金额: centsToNumber(expectedIncome),
     },
     failures,
+  };
+}
+
+export function prepareBatch(rows, companyRows, exclusions = []) {
+  const companyMap = buildCompanyMap(companyRows);
+  const excluded = [];
+  const anomalies = [];
+  const candidates = [];
+  let baseEligible = 0;
+  let manualExcluded = 0;
+
+  for (const row of rows) {
+    const reasons = baseFilterReasons(row);
+    if (reasons.length > 0) {
+      excluded.push({ row, type: "基础筛选", reason: reasons.join("；") });
+      continue;
+    }
+    baseEligible += 1;
+    const manual = isExcluded(row, exclusions);
+    if (manual.excluded) {
+      manualExcluded += 1;
+      excluded.push({ row, type: "人工排除", reason: manual.reason });
+      continue;
+    }
+    candidates.push(row);
+  }
+
+  const groups = new Map();
+  for (const row of candidates) {
+    const key = buildExclusionKey(row);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(row);
+  }
+
+  const duplicateKeys = new Set();
+  for (const [key, group] of groups) {
+    if (group.length > 1) {
+      duplicateKeys.add(key);
+      for (const row of group) {
+        anomalies.push({ row, type: "重复产品记录", details: `同组共有${group.length}条记录` });
+      }
+    }
+  }
+
+  const ready = [];
+  const matchedCompanyNames = new Set();
+  let matchedProducts = 0;
+  let companyMissing = 0;
+
+  for (const row of candidates) {
+    if (duplicateKeys.has(buildExclusionKey(row))) continue;
+    const company = resolveCompany(row.企业名称, companyMap);
+    if (company.status !== "matched") {
+      companyMissing += 1;
+      anomalies.push({
+        row,
+        type: "乙方公司信息缺失",
+        details: `${company.status}：${company.missingFields.join("、")}`,
+      });
+      continue;
+    }
+    matchedProducts += 1;
+    matchedCompanyNames.add(normalizeText(row.企业名称));
+    const reconciliation = reconcileRow(row);
+    if (!reconciliation.ok) {
+      anomalies.push({ row, type: "金额核对失败", details: reconciliation.failures });
+      continue;
+    }
+    ready.push({
+      ...row,
+      normalizedGame: normalizeGameName(row.游戏名称),
+      monthKey: normalizeMonth(row.月份),
+      companyInfo: company.row,
+      reconciliation,
+    });
+  }
+
+  return {
+    ready,
+    excluded,
+    anomalies,
+    stats: {
+      totalRows: rows.length,
+      baseEligible,
+      baseExcluded: rows.length - baseEligible,
+      manualExcluded,
+      ready: ready.length,
+      matchedProducts,
+      matchedCompanies: matchedCompanyNames.size,
+      companyMissing,
+      blockingAnomalies: anomalies.length,
+    },
+    companyDuplicateCount: companyMap.duplicateCount,
   };
 }
