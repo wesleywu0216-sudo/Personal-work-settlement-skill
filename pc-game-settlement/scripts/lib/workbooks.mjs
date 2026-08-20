@@ -213,6 +213,7 @@ export async function writeSettlementWorkbook({ templatePath, row, outputPath })
   sheet.getRange("E5:H5").format.numberFormat = "#,##0.00";
   sheet.getRange("J6").format.numberFormat = "#,##0.00";
   sheet.getRange("L6:M7").format.numberFormat = "#,##0.00";
+  sheet.getRange("M5").format.numberFormat = "#,##0.00";
   sheet.getRange("I6").format.numberFormat = "0.00%";
   sheet.getRange("K6").format.numberFormat = "0.00%";
   sheet.getRange("B15:B19").format.numberFormat = "@";
