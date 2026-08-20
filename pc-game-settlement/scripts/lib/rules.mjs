@@ -19,24 +19,29 @@ export function normalizeMonth(value) {
   return match ? `${match[1]}${match[2]}` : text;
 }
 
+export function isPositiveApprovalStatus(value) {
+  const text = normalizeText(value);
+  return text.includes("通过") && !text.includes("不通过");
+}
+
 export function passesBaseFilter(row) {
   return (
-    normalizeText(row.合同初审状态) === "审核通过" &&
-    normalizeText(row.合同复审状态) === "审核通过" &&
-    toCents(row.收入金额) !== 0n
+    isPositiveApprovalStatus(row.合同初审状态) &&
+    isPositiveApprovalStatus(row.合同复审状态) &&
+    toCents(row.收入金额) >= 100n
   );
 }
 
 export function baseFilterReasons(row) {
   const reasons = [];
-  if (normalizeText(row.合同初审状态) !== "审核通过") {
+  if (!isPositiveApprovalStatus(row.合同初审状态)) {
     reasons.push(`合同初审状态=${normalizeText(row.合同初审状态) || "空"}`);
   }
-  if (normalizeText(row.合同复审状态) !== "审核通过") {
+  if (!isPositiveApprovalStatus(row.合同复审状态)) {
     reasons.push(`合同复审状态=${normalizeText(row.合同复审状态) || "空"}`);
   }
-  if (toCents(row.收入金额) === 0n) {
-    reasons.push("收入金额=0");
+  if (toCents(row.收入金额) < 100n) {
+    reasons.push("收入金额<1");
   }
   return reasons;
 }
