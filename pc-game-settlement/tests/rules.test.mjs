@@ -26,13 +26,22 @@ test("游戏名称只移除末尾PC版标识", () => {
   assert.equal(normalizeGameName("PC版传奇"), "PC版传奇");
 });
 
-test("基础筛选要求两个合同状态精确通过且收入非零", () => {
-  assert.equal(passesBaseFilter(whiteSilverRow), true);
+test("基础筛选要求初审复审状态包含通过且不包含不通过，收入金额至少1元", () => {
   assert.equal(
-    passesBaseFilter({ ...whiteSilverRow, 合同复审状态: "电子签审核通过" }),
+    passesBaseFilter({
+      ...whiteSilverRow,
+      合同初审状态: "电子签审核通过",
+      合同复审状态: "电子签审核通过",
+      收入金额: 1,
+    }),
+    true,
+  );
+  assert.equal(
+    passesBaseFilter({ ...whiteSilverRow, 合同复审状态: "审核不通过", 收入金额: 10 }),
     false,
   );
-  assert.equal(passesBaseFilter({ ...whiteSilverRow, 收入金额: 0 }), false);
+  assert.equal(passesBaseFilter({ ...whiteSilverRow, 收入金额: 0.99 }), false);
+  assert.equal(passesBaseFilter({ ...whiteSilverRow, 收入金额: 1 }), true);
 });
 
 test("人工排除按月份标准游戏名和企业精确命中", () => {

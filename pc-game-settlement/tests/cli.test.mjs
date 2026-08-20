@@ -1,10 +1,20 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
+import fs from "node:fs/promises";
 
 import { parseArgs } from "../scripts/cli.mjs";
 
 const NODE = "C:/Users/wuweixin/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node.exe";
+
+test("Skill明确要求结算金额使用千分位两位小数格式", async () => {
+  const [skill, inputSchema] = await Promise.all([
+    fs.readFile("pc-game-settlement/SKILL.md", "utf8"),
+    fs.readFile("pc-game-settlement/references/input-schema.md", "utf8"),
+  ]);
+  assert.match(skill, /#,##0\.00/);
+  assert.match(inputSchema, /#,##0\.00/);
+});
 
 test("缺少必需参数时返回可识别的参数错误", () => {
   assert.throws(
