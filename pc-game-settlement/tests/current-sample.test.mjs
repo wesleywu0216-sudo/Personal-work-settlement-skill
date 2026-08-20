@@ -80,6 +80,7 @@ test("原神结算单替换外部引用并写入乙方资料", async () => {
   assert.equal(sheet.getRange("E5:H5").format.numberFormat, "#,##0.00");
   assert.equal(sheet.getRange("J6").format.numberFormat, "#,##0.00");
   assert.equal(sheet.getRange("L6:M7").format.numberFormat, "#,##0.00");
+  assert.equal(sheet.getRange("M5").format.numberFormat, "#,##0.00");
   assert.equal(formulas.some((formula) => /\[|\]|_xlfn|端游!/.test(formula)), false);
 
   const validation = await validateSettlementWorkbook(outputPath, row);

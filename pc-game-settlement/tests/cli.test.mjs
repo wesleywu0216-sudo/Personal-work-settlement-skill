@@ -16,6 +16,11 @@ function assertSettlementRules(document) {
   );
 }
 
+function assertAmountsRemainNumeric(document) {
+  assert.match(document, /金额[^。\r\n]*保持[^。\r\n]*数值\s*或\s*公式/);
+  assert.match(document, /不得[^。\r\n]*转(?:换)?成[^。\r\n]*文本/);
+}
+
 test("文档规则断言兼容合法表述并拒绝旧口径", () => {
   assert.doesNotThrow(() =>
     assertSettlementRules(
@@ -30,15 +35,17 @@ test("文档规则断言兼容合法表述并拒绝旧口径", () => {
   );
 });
 
-test("Skill明确结算金额格式、合同状态和最低收入规则", async () => {
+test("Skill明确结算金额格式、数据类型、合同状态和最低收入规则", async () => {
   const [skill, inputSchema] = await Promise.all([
     fs.readFile("pc-game-settlement/SKILL.md", "utf8"),
     fs.readFile("pc-game-settlement/references/input-schema.md", "utf8"),
   ]);
   assert.match(skill, /#,##0\.00/);
   assertSettlementRules(skill);
+  assertAmountsRemainNumeric(skill);
   assert.match(inputSchema, /#,##0\.00/);
   assertSettlementRules(inputSchema);
+  assertAmountsRemainNumeric(inputSchema);
 });
 
 test("缺少必需参数时返回可识别的参数错误", () => {
