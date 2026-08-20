@@ -135,4 +135,7 @@ test("汇总工作簿包含四张清单并记录白银之城人工排除", async
   assert.equal(whiteSilver[7], "收入 0.1 元，经确认不结算");
   const anomalyValues = workbook.worksheets.getItem("异常清单").getUsedRange(true).values;
   assert.equal(anomalyValues[1][0], "无阻断异常");
+  const infoValues = workbook.worksheets.getItem("运行信息").getUsedRange(true).values;
+  const runAt = infoValues.find((row) => row[0] === "运行时间");
+  assert.equal(runAt[1], "生成于 2026-08-20T12:00:00+08:00");
 });

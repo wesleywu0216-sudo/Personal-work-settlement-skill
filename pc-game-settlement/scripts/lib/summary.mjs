@@ -97,7 +97,7 @@ export async function writeSummaryWorkbook({ batch, outputPath, metadata }) {
     ["乙方公司信息表", metadata.companyPath],
     ["结算单模板", metadata.templatePath],
     ["输出目录", metadata.outputDir],
-    ["运行时间", metadata.runAt],
+    ["运行时间", `生成于 ${metadata.runAt}`],
     ["月份", batch.ready[0]?.monthKey ?? ""],
     ["业务明细数", batch.stats.totalRows],
     ["基础通过数", batch.stats.baseEligible],
