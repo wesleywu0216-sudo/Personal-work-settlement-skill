@@ -8,10 +8,27 @@ import { parseArgs } from "../scripts/cli.mjs";
 const NODE = "C:/Users/wuweixin/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node.exe";
 
 function assertSettlementRules(document) {
-  assert.match(document, /合同初审[^。\r\n]*复审[^。\r\n]*(?:必须|需要|应当|均需|都要)[^。\r\n]*包含[^。\r\n]*(?<!不)通过/);
+  assert.match(document, /合同初审[^。\r\n]*复审[^。\r\n]*包含\s*[“"]?通过[”"]?/);
   assert.match(document, /(?:不包含|不得包含|排除)[^。\r\n]*不通过/);
-  assert.match(document, /收入(?:金额)?[^。\r\n]*(?:至少\s*1\s*元|(?:>=|≥)\s*1(?:\s*元)?)/);
+  assert.match(
+    document,
+    /收入(?:金额)?[^。\r\n]*(?:(?:至少|不低于|大于等于)\s*1\s*元|(?:>=|≥)\s*1(?:\s*元)?)/,
+  );
 }
+
+test("文档规则断言兼容合法表述并拒绝旧口径", () => {
+  assert.doesNotThrow(() =>
+    assertSettlementRules(
+      "合同初审和复审状态均须包含“通过”，且不得包含“不通过”；收入金额必须大于等于1元。",
+    ),
+  );
+  assert.doesNotThrow(() =>
+    assertSettlementRules("合同初审和复审状态均需包含通过且排除不通过；收入金额至少1元。"),
+  );
+  assert.throws(() =>
+    assertSettlementRules("合同初审和复审状态都必须精确等于“审核通过”；收入必须非零。"),
+  );
+});
 
 test("Skill明确结算金额格式、合同状态和最低收入规则", async () => {
   const [skill, inputSchema] = await Promise.all([
