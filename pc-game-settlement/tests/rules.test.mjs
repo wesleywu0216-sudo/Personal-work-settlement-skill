@@ -7,6 +7,7 @@ import {
   isExcluded,
   normalizeGameName,
   passesBaseFilter,
+  prepareBatch,
   reconcileRow,
   resolveCompany,
 } from "../scripts/lib/rules.mjs";
@@ -20,19 +21,124 @@ const whiteSilverRow = {
   收入金额: 0.1,
 };
 
+const validBatchCompany = {
+  公司: "有效公司",
+  开户银行: "测试银行",
+  银行帐号: "001",
+  联系人: "结算组",
+  电话: "13800138000",
+};
+
+function makeBatchRow({ id, game, income, initialStatus = "审核通过", reviewStatus = "审核通过" }) {
+  return {
+    对账单ID: id,
+    月份: "202607",
+    游戏名称: game,
+    企业名称: validBatchCompany.公司,
+    流水总计: income,
+    非结算金额: 0,
+    退款金额: 0,
+    对账金额: income,
+    渠道费率: 0,
+    渠道费: 0,
+    税费: 0,
+    结算基数: income,
+    比例: 1,
+    收入金额: income,
+    合同初审状态: initialStatus,
+    合同复审状态: reviewStatus,
+  };
+}
+
 test("游戏名称只移除末尾PC版标识", () => {
   assert.equal(normalizeGameName("崩坏：星穹铁道（PC版）"), "崩坏：星穹铁道");
   assert.equal(normalizeGameName("鸣潮(PC版)"), "鸣潮");
   assert.equal(normalizeGameName("PC版传奇"), "PC版传奇");
 });
 
-test("基础筛选要求两个合同状态精确通过且收入非零", () => {
-  assert.equal(passesBaseFilter(whiteSilverRow), true);
+test("基础筛选接受初审复审状态包含通过且不包含不通过", () => {
   assert.equal(
-    passesBaseFilter({ ...whiteSilverRow, 合同复审状态: "电子签审核通过" }),
+    passesBaseFilter({
+      ...whiteSilverRow,
+      合同初审状态: "电子签审核通过",
+      合同复审状态: "电子签审核通过",
+      收入金额: 1,
+    }),
+    true,
+  );
+});
+
+test("基础筛选拒绝初审或复审任一状态包含不通过", () => {
+  assert.equal(
+    passesBaseFilter({ ...whiteSilverRow, 合同初审状态: "审核不通过", 收入金额: 10 }),
     false,
   );
-  assert.equal(passesBaseFilter({ ...whiteSilverRow, 收入金额: 0 }), false);
+  assert.equal(
+    passesBaseFilter({ ...whiteSilverRow, 合同复审状态: "审核不通过", 收入金额: 10 }),
+    false,
+  );
+});
+
+test("基础筛选要求收入金额至少1元", () => {
+  assert.equal(passesBaseFilter({ ...whiteSilverRow, 收入金额: 0.99 }), false);
+  assert.equal(passesBaseFilter({ ...whiteSilverRow, 收入金额: 1 }), true);
+});
+
+test("prepareBatch按合同状态与1元收入门槛筛选后再匹配公司", () => {
+  const result = prepareBatch(
+    [
+      makeBatchRow({
+        id: "electronic-pass",
+        game: "电子签通过产品",
+        income: 1,
+        initialStatus: "电子签审核通过",
+        reviewStatus: "电子签审核通过",
+      }),
+      makeBatchRow({
+        id: "initial-not-pass",
+        game: "初审不通过产品",
+        income: 10,
+        initialStatus: "审核不通过",
+      }),
+      makeBatchRow({
+        id: "review-not-pass",
+        game: "复审不通过产品",
+        income: 10,
+        reviewStatus: "审核不通过",
+      }),
+      makeBatchRow({ id: "below-threshold", game: "低于门槛产品", income: 0.99 }),
+      makeBatchRow({ id: "at-threshold", game: "达到门槛产品", income: 1 }),
+    ],
+    [validBatchCompany],
+  );
+
+  assert.deepEqual(
+    result.ready.map((row) => row.对账单ID),
+    ["electronic-pass", "at-threshold"],
+  );
+  assert.deepEqual(
+    result.excluded.map(({ row, type }) => ({ id: row.对账单ID, type })),
+    [
+      { id: "initial-not-pass", type: "基础筛选" },
+      { id: "review-not-pass", type: "基础筛选" },
+      { id: "below-threshold", type: "基础筛选" },
+    ],
+  );
+  assert.equal(
+    result.excluded.find(({ row }) => row.对账单ID === "below-threshold").reason,
+    "收入金额<1",
+  );
+  assert.deepEqual(result.stats, {
+    totalRows: 5,
+    baseEligible: 2,
+    baseExcluded: 3,
+    manualExcluded: 0,
+    ready: 2,
+    matchedProducts: 2,
+    matchedCompanies: 1,
+    companyMissing: 0,
+    blockingAnomalies: 0,
+  });
 });
 
 test("人工排除按月份标准游戏名和企业精确命中", () => {

@@ -22,7 +22,7 @@
 在“原神结算单替换外部引用并写入乙方资料”测试中加入：
 
 ```js
-for (const address of ["E5:H5", "J6", "L6:M7"]) {
+for (const address of ["E5:H5", "J6", "L6:M7", "M5"]) {
   assert.equal(sheet.getRange(address).format.numberFormat, "#,##0.00");
 }
 ```
@@ -77,6 +77,7 @@ Expected: FAIL；现有工作簿格式为 `0.00`，Skill 文档缺少格式规�
 sheet.getRange("E5:H5").format.numberFormat = "#,##0.00";
 sheet.getRange("J6").format.numberFormat = "#,##0.00";
 sheet.getRange("L6:M7").format.numberFormat = "#,##0.00";
+sheet.getRange("M5").format.numberFormat = "#,##0.00";
 ```
 
 百分比格式 `I6`、`K6` 继续使用 `0.00%`。
@@ -104,7 +105,7 @@ export function isApprovedStatus(value) {
 在 `input-schema.md` 中写明相同筛选口径，并加入：
 
 ```markdown
-金额单元格 `E5:H5`、`J6`、`L6:M7` 使用数字格式 `#,##0.00`；百分比单元格继续使用 `0.00%`。
+金额单元格 `E5:H5`、`J6`、`L6:M7`、`M5` 保持数值或公式并使用 `#,##0.00`；百分比单元格继续使用 `0.00%`。
 ```
 
 - [ ] **Step 4: 运行目标测试并确认通过**
@@ -117,7 +118,7 @@ Expected: PASS。
 
 Run: `node --test pc-game-settlement/tests/*.test.mjs`
 
-Expected: 25 tests, 25 pass, 0 fail。
+Expected: 29 tests, 29 pass, 0 fail。
 
 Commit:
 
