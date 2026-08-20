@@ -1,0 +1,8 @@
+{
+  "name": "pc-game-settlement-skill",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test pc-game-settlement/tests/*.test.mjs"
+  }
+}
