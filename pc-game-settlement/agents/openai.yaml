@@ -1,3 +1,4 @@
 interface:
-  display_name: "Pc Game Settlement"
-  short_description: "Help with Pc Game Settlement tasks"
+  display_name: "端游结算单批量生成"
+  short_description: "从后台财务明细和乙方公司资料批量生成并逐份核对端游结算单"
+  default_prompt: "请使用 $pc-game-settlement 根据后台财务对账明细、乙方公司信息表和端游结算模板，先预检，再批量生成并逐份核对结算单。"
