@@ -1,3 +1,6 @@
+import fs from "node:fs/promises";
+import path from "node:path";
+
 import { FileBlob, SpreadsheetFile } from "@oai/artifact-tool";
 
 import { normalizeText } from "./rules.mjs";
@@ -161,4 +164,59 @@ export async function readBackendWorkbook(filePath) {
 export async function readCompanyWorkbook(filePath) {
   const loaded = await readWorkbookMatrix(filePath, "Sheet1");
   return { ...loaded, ...parseCompanyMatrix(loaded.matrix) };
+}
+
+export function formatSettlementPeriod(value) {
+  const text = normalizeText(value);
+  const match = /^(\d{4})-(\d{2})-(\d{2})\s*[~～—–-]\s*(\d{4})-(\d{2})-(\d{2})$/.exec(text);
+  if (!match) {
+    throw new Error(`无法识别结算周期：${text}`);
+  }
+  return `${match[1]}.${match[2]}.${match[3]}-${match[4]}.${match[5]}.${match[6]}`;
+}
+
+export function settlementOutputFileName(row) {
+  return `${row.normalizedGame} （端游）${row.monthKey}.xlsx`;
+}
+
+export async function writeSettlementWorkbook({ templatePath, row, outputPath }) {
+  const workbook = await SpreadsheetFile.importXlsx(await FileBlob.load(templatePath));
+  const sheet = workbook.worksheets.getItem("对账单");
+  const company = row.companyInfo;
+
+  sheet.getRange("A3").values = [[`TO ${normalizeText(row.企业名称)}`]];
+  sheet.getRange("A5").values = [[formatSettlementPeriod(row.结算周期)]];
+  sheet.getRange("C5:G5").values = [[
+    row.normalizedGame,
+    "付费下载",
+    row.流水总计,
+    row.非结算金额,
+    row.退款金额,
+  ]];
+  sheet.getRange("H5").formulas = [["=ROUND(E5-F5-G5,2)"]];
+  sheet.getRange("I6").values = [[row.渠道费率]];
+  sheet.getRange("J6").formulas = [["=ROUND(H5*I6,2)"]];
+  sheet.getRange("K6").values = [[row.比例]];
+  sheet.getRange("L6").formulas = [["=ROUND((H5-J6)*K6,2)"]];
+  sheet.getRange("M5").formulas = [["=L6"]];
+  sheet.getRange("M7").formulas = [["=SUM(M5:M6)"]];
+  sheet.getRange("B15:B19").values = [
+    [`公司名称：${company.公司}`],
+    [`开户银行：${company.开户银行}`],
+    [`银行帐号：${company.银行帐号}`],
+    [`联 系 人 ：${company.联系人}`],
+    [`电      话：${company.电话}`],
+  ];
+
+  sheet.getRange("E5:H5").format.numberFormat = "0.00";
+  sheet.getRange("J6").format.numberFormat = "0.00";
+  sheet.getRange("L6:M7").format.numberFormat = "0.00";
+  sheet.getRange("I6").format.numberFormat = "0.00%";
+  sheet.getRange("K6").format.numberFormat = "0.00%";
+  sheet.getRange("B15:B19").format.numberFormat = "@";
+
+  await fs.mkdir(path.dirname(outputPath), { recursive: true });
+  const exported = await SpreadsheetFile.exportXlsx(workbook);
+  await exported.save(outputPath);
+  return { workbook, sheet, outputPath };
 }
