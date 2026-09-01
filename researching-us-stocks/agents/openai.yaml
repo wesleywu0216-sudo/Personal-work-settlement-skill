@@ -1,0 +1,4 @@
+interface:
+  display_name: "美股长期个股研究"
+  short_description: "分阶段研究美股公司、行业、估值、时机与风险"
+  default_prompt: "使用 $researching-us-stocks 研究美股；请提供公司名或代码及可选截止日。仅在身份有歧义时追问交易所；完整深研需用户明确请求且通过全部门槛。"
