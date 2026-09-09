@@ -1,0 +1,29 @@
+name: Game settlement checks
+on:
+  push:
+    paths:
+      - "game-settlement/**"
+      - "tests/**"
+      - ".github/workflows/game-settlement-checks.yml"
+  pull_request:
+    paths:
+      - "game-settlement/**"
+      - "tests/**"
+      - ".github/workflows/game-settlement-checks.yml"
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Run synthetic checks
+        run: python -B -m unittest discover -s tests -v
+      - name: Run example batch
+        run: python game-settlement/scripts/calculate.py game-settlement/examples/synthetic-batch.json

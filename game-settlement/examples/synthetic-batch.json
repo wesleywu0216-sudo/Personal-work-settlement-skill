@@ -1,0 +1,390 @@
+{
+  "cases": [
+    {
+      "id": "cooperation",
+      "batch": "2026-06",
+      "scope": {
+        "channel": "sample-channel",
+        "entity": "sample-entity",
+        "product": "sample-cooperation",
+        "region": "sample-region",
+        "platform": "sample-platform",
+        "partner": "sample-partner",
+        "contract": "sample-contract-cooperation"
+      },
+      "period_start": "2026-05-01",
+      "period_end": "2026-05-31",
+      "source_refs": [
+        "synthetic:example:cooperation"
+      ],
+      "basis_confirmed": true,
+      "version_confirmed": true,
+      "inputs": {
+        "gross": "1000",
+        "refunds": "100",
+        "excluded": "100",
+        "fee_rate": "0.10",
+        "share_rate": "0.50"
+      },
+      "rule": {
+        "id": "synthetic-cooperation-v1",
+        "status": "approved",
+        "evidence": "synthetic:approved-example-only",
+        "scope": {
+          "channel": "sample-channel",
+          "entity": "sample-entity",
+          "product": "sample-cooperation",
+          "region": "sample-region",
+          "platform": "sample-platform",
+          "partner": "sample-partner",
+          "contract": "sample-contract-cooperation"
+        },
+        "effective_from": "2026-01-01",
+        "effective_to": "2026-12-31",
+        "currency": "CNY",
+        "rounding": "ROUND_HALF_UP",
+        "input_constraints": {
+          "gross": {
+            "min": "0"
+          },
+          "refunds": {
+            "min": "0"
+          },
+          "excluded": {
+            "min": "0"
+          },
+          "fee_rate": {
+            "min": "0",
+            "max": "1"
+          },
+          "share_rate": {
+            "min": "0",
+            "max": "1"
+          }
+        },
+        "steps": [
+          {
+            "name": "eligible",
+            "op": "sub",
+            "args": [
+              "gross",
+              "refunds",
+              "excluded"
+            ],
+            "places": 2
+          },
+          {
+            "name": "fee",
+            "op": "mul",
+            "args": [
+              "eligible",
+              "fee_rate"
+            ],
+            "places": 2
+          },
+          {
+            "name": "basis",
+            "op": "sub",
+            "args": [
+              "eligible",
+              "fee"
+            ],
+            "places": 2
+          },
+          {
+            "name": "payable",
+            "op": "mul",
+            "args": [
+              "basis",
+              "share_rate"
+            ],
+            "places": 2
+          }
+        ],
+        "outputs": [
+          "payable"
+        ]
+      }
+    },
+    {
+      "id": "net-share",
+      "batch": "2026-06",
+      "scope": {
+        "channel": "sample-channel",
+        "entity": "sample-entity",
+        "product": "sample-net-share",
+        "region": "sample-region",
+        "platform": "sample-platform",
+        "partner": "sample-partner",
+        "contract": "sample-contract-net-share"
+      },
+      "period_start": "2026-05-01",
+      "period_end": "2026-05-31",
+      "source_refs": [
+        "synthetic:example:net-share"
+      ],
+      "basis_confirmed": true,
+      "version_confirmed": true,
+      "inputs": {
+        "confirmed_net": "700",
+        "share_rate": "0.50"
+      },
+      "rule": {
+        "id": "synthetic-net-share-v1",
+        "status": "approved",
+        "evidence": "synthetic:approved-example-only",
+        "scope": {
+          "channel": "sample-channel",
+          "entity": "sample-entity",
+          "product": "sample-net-share",
+          "region": "sample-region",
+          "platform": "sample-platform",
+          "partner": "sample-partner",
+          "contract": "sample-contract-net-share"
+        },
+        "effective_from": "2026-01-01",
+        "effective_to": "2026-12-31",
+        "currency": "CNY",
+        "rounding": "ROUND_HALF_UP",
+        "input_constraints": {
+          "confirmed_net": {
+            "min": "0"
+          },
+          "share_rate": {
+            "min": "0",
+            "max": "1"
+          }
+        },
+        "steps": [
+          {
+            "name": "payable",
+            "op": "mul",
+            "args": [
+              "confirmed_net",
+              "share_rate"
+            ],
+            "places": 2
+          }
+        ],
+        "outputs": [
+          "payable"
+        ]
+      }
+    },
+    {
+      "id": "host",
+      "batch": "2026-06",
+      "scope": {
+        "channel": "sample-channel",
+        "entity": "sample-entity",
+        "product": "sample-host",
+        "region": "sample-region",
+        "platform": "console",
+        "partner": "sample-partner",
+        "contract": "sample-contract-host"
+      },
+      "period_start": "2026-05-01",
+      "period_end": "2026-05-31",
+      "source_refs": [
+        "synthetic:example:host"
+      ],
+      "basis_confirmed": true,
+      "version_confirmed": true,
+      "inputs": {
+        "remittance_usd": "1000",
+        "share_rate": "0.50",
+        "fx_cny_per_usd": "7.20",
+        "advance_cny": "1080",
+        "zero": "0"
+      },
+      "rule": {
+        "id": "synthetic-host-v1",
+        "status": "approved",
+        "evidence": "synthetic:approved-example-only",
+        "scope": {
+          "channel": "sample-channel",
+          "entity": "sample-entity",
+          "product": "sample-host",
+          "region": "sample-region",
+          "platform": "console",
+          "partner": "sample-partner",
+          "contract": "sample-contract-host"
+        },
+        "effective_from": "2026-01-01",
+        "effective_to": "2026-12-31",
+        "currency": "CNY",
+        "rounding": "ROUND_HALF_UP",
+        "input_constraints": {
+          "remittance_usd": {
+            "min": "0"
+          },
+          "share_rate": {
+            "min": "0",
+            "max": "1"
+          },
+          "fx_cny_per_usd": {
+            "min": "0.000000000001"
+          },
+          "advance_cny": {
+            "min": "0"
+          },
+          "zero": {
+            "min": "0",
+            "max": "0"
+          }
+        },
+        "steps": [
+          {
+            "name": "share_usd",
+            "op": "mul",
+            "args": [
+              "remittance_usd",
+              "share_rate"
+            ],
+            "places": 2
+          },
+          {
+            "name": "share_cny",
+            "op": "mul",
+            "args": [
+              "share_usd",
+              "fx_cny_per_usd"
+            ],
+            "places": 2
+          },
+          {
+            "name": "deduction",
+            "op": "min",
+            "args": [
+              "share_cny",
+              "advance_cny"
+            ],
+            "places": 2
+          },
+          {
+            "name": "payable",
+            "op": "sub",
+            "args": [
+              "share_cny",
+              "deduction"
+            ],
+            "places": 2
+          },
+          {
+            "name": "closing_advance",
+            "op": "sub",
+            "args": [
+              "advance_cny",
+              "deduction"
+            ],
+            "places": 2
+          }
+        ],
+        "outputs": [
+          "payable",
+          "closing_advance"
+        ]
+      }
+    },
+    {
+      "id": "profit",
+      "batch": "2026-06",
+      "scope": {
+        "channel": "sample-channel",
+        "entity": "sample-entity",
+        "product": "sample-profit",
+        "region": "sample-region",
+        "platform": "sample-platform",
+        "partner": "sample-partner",
+        "contract": "sample-contract-profit"
+      },
+      "period_start": "2026-05-01",
+      "period_end": "2026-05-31",
+      "source_refs": [
+        "synthetic:example:profit"
+      ],
+      "basis_confirmed": true,
+      "version_confirmed": true,
+      "inputs": {
+        "period_profit": "100",
+        "opening_loss": "-150",
+        "share_rate": "0.50",
+        "zero": "0"
+      },
+      "rule": {
+        "id": "synthetic-profit-v1",
+        "status": "approved",
+        "evidence": "synthetic:approved-example-only",
+        "scope": {
+          "channel": "sample-channel",
+          "entity": "sample-entity",
+          "product": "sample-profit",
+          "region": "sample-region",
+          "platform": "sample-platform",
+          "partner": "sample-partner",
+          "contract": "sample-contract-profit"
+        },
+        "effective_from": "2026-01-01",
+        "effective_to": "2026-12-31",
+        "currency": "CNY",
+        "rounding": "ROUND_HALF_UP",
+        "input_constraints": {
+          "period_profit": {},
+          "opening_loss": {
+            "max": "0"
+          },
+          "share_rate": {
+            "min": "0",
+            "max": "1"
+          },
+          "zero": {
+            "min": "0",
+            "max": "0"
+          }
+        },
+        "steps": [
+          {
+            "name": "cumulative",
+            "op": "add",
+            "args": [
+              "period_profit",
+              "opening_loss"
+            ],
+            "places": 2
+          },
+          {
+            "name": "distributable",
+            "op": "max",
+            "args": [
+              "cumulative",
+              "zero"
+            ],
+            "places": 2
+          },
+          {
+            "name": "payable",
+            "op": "mul",
+            "args": [
+              "distributable",
+              "share_rate"
+            ],
+            "places": 2
+          },
+          {
+            "name": "closing_loss",
+            "op": "min",
+            "args": [
+              "cumulative",
+              "zero"
+            ],
+            "places": 2
+          }
+        ],
+        "outputs": [
+          "payable",
+          "closing_loss"
+        ]
+      }
+    }
+  ]
+}

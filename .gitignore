@@ -4,3 +4,21 @@ local/
 test-output/
 qa-render/
 
+
+# Generic settlement skill local data
+__pycache__/
+*.pyc
+.venv/
+.env
+.env.*
+private/
+local/
+outputs/
+artifacts/
+*.xlsx
+*.xls
+*.csv
+*.zip
+*.pdf
+*.docx
+*.log
